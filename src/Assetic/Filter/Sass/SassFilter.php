@@ -13,6 +13,7 @@ namespace Assetic\Filter\Sass;
 
 use Assetic\Asset\AssetInterface;
 use Assetic\Exception\FilterException;
+use Assetic\Util\FilesystemUtils;
 
 /**
  * Loads SASS files.
@@ -32,6 +33,7 @@ class SassFilter extends BaseSassFilter
     private $unixNewlines;
     private $scss;
     private $style;
+    private $precision;
     private $quiet;
     private $debugInfo;
     private $lineNumbers;
@@ -45,7 +47,7 @@ class SassFilter extends BaseSassFilter
     {
         $this->sassPath = $sassPath;
         $this->rubyPath = $rubyPath;
-        $this->cacheLocation = realpath(sys_get_temp_dir());
+        $this->cacheLocation = FilesystemUtils::getTemporaryDirectory();
     }
 
     public function setUnixNewlines($unixNewlines)
@@ -61,6 +63,11 @@ class SassFilter extends BaseSassFilter
     public function setStyle($style)
     {
         $this->style = $style;
+    }
+
+    public function setPrecision($precision)
+    {
+        $this->precision = $precision;
     }
 
     public function setQuiet($quiet)
@@ -81,16 +88,6 @@ class SassFilter extends BaseSassFilter
     public function setSourceMap($sourceMap)
     {
         $this->sourceMap = $sourceMap;
-    }
-
-    public function setLoadPaths(array $loadPaths)
-    {
-        $this->loadPaths = $loadPaths;
-    }
-
-    public function addLoadPath($loadPath)
-    {
-        $this->loadPaths[] = $loadPath;
     }
 
     public function setCacheLocation($cacheLocation)
@@ -133,6 +130,10 @@ class SassFilter extends BaseSassFilter
             $pb->add('--style')->add($this->style);
         }
 
+        if ($this->precision) {
+            $pb->add('--precision')->add($this->precision);
+        }
+
         if ($this->quiet) {
             $pb->add('--quiet');
         }
@@ -166,7 +167,7 @@ class SassFilter extends BaseSassFilter
         }
 
         // input
-        $pb->add($input = tempnam(sys_get_temp_dir(), 'assetic_sass'));
+        $pb->add($input = FilesystemUtils::createTemporaryFile('sass'));
         file_put_contents($input, $asset->getContent());
 
         $proc = $pb->getProcess();
