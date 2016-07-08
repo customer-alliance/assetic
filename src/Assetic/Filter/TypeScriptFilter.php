@@ -56,7 +56,9 @@ class TypeScriptFilter extends BaseNodeFilter
         $inputPath = $inputDirPath.DIRECTORY_SEPARATOR.$templateName.'.ts';
         $outputPath = FilesystemUtils::createTemporaryFile('typescript_out');
 
-        mkdir($inputDirPath);
+        if (!is_dir($inputDirPath))
+            mkdir($inputDirPath);
+
         file_put_contents($inputPath, $this->getAssetContent($asset));
 
         $pb->add($inputPath)->add('--out')->add($outputPath);
