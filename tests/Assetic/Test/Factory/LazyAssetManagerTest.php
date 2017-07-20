@@ -16,6 +16,7 @@ use Assetic\Factory\LazyAssetManager;
 class LazyAssetManagerTest extends \PHPUnit_Framework_TestCase
 {
     private $factory;
+    private $am;
 
     protected function setUp()
     {
@@ -26,11 +27,17 @@ class LazyAssetManagerTest extends \PHPUnit_Framework_TestCase
         $this->am = new LazyAssetManager($this->factory);
     }
 
+    protected function tearDown()
+    {
+        $this->factory = null;
+        $this->am = null;
+    }
+
     public function testGetFromLoader()
     {
-        $resource = $this->getMock('Assetic\\Factory\\Resource\\ResourceInterface');
-        $loader = $this->getMock('Assetic\\Factory\\Loader\\FormulaLoaderInterface');
-        $asset = $this->getMock('Assetic\\Asset\\AssetInterface');
+        $resource = $this->getMockBuilder('Assetic\\Factory\\Resource\\ResourceInterface')->getMock();
+        $loader = $this->getMockBuilder('Assetic\\Factory\\Loader\\FormulaLoaderInterface')->getMock();
+        $asset = $this->getMockBuilder('Assetic\\Asset\\AssetInterface')->getMock();
 
         $formula = array(
             array('js/core.js', 'js/more.js'),
@@ -59,8 +66,8 @@ class LazyAssetManagerTest extends \PHPUnit_Framework_TestCase
     public function testGetResources()
     {
         $resources = array(
-            $this->getMock('Assetic\\Factory\\Resource\\ResourceInterface'),
-            $this->getMock('Assetic\\Factory\\Resource\\ResourceInterface'),
+            $this->getMockBuilder('Assetic\\Factory\\Resource\\ResourceInterface')->getMock(),
+            $this->getMockBuilder('Assetic\\Factory\\Resource\\ResourceInterface')->getMock(),
         );
 
         $this->am->addResource($resources[0], 'foo');
@@ -96,7 +103,7 @@ class LazyAssetManagerTest extends \PHPUnit_Framework_TestCase
 
     public function testGetLastModified()
     {
-        $asset = $this->getMock('Assetic\Asset\AssetInterface');
+        $asset = $this->getMockBuilder('Assetic\Asset\AssetInterface')->getMock();
 
         $this->factory->expects($this->once())
             ->method('getLastModified')
