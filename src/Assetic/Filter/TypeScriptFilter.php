@@ -26,10 +26,18 @@ class TypeScriptFilter extends BaseNodeFilter
     private $tscBin;
     private $nodeBin;
 
-    public function __construct($tscBin = '/usr/bin/tsc', $nodeBin = null)
+    /**
+     * @var bool
+     */
+    private $useRealPath = false;
+
+    public function __construct($tscBin = '/usr/bin/tsc', $nodeBin = null, $options = array())
     {
         $this->tscBin = $tscBin;
         $this->nodeBin = $nodeBin;
+        if (isset($options['use_real_path'])) {
+            $this->useRealPath = $options['use_real_path'] == true;
+        }
     }
 
     public function filterLoad(AssetInterface $asset)
@@ -48,7 +56,7 @@ class TypeScriptFilter extends BaseNodeFilter
         $inputPath = $inputDirPath.DIRECTORY_SEPARATOR.$templateName.'.ts';
         $outputPath = FilesystemUtils::createTemporaryFile('typescript_out');
 
-        file_put_contents($inputPath, $asset->getContent());
+        file_put_contents($inputPath, $this->getAssetContent($asset));
 
         $pb->add($inputPath)->add('--out')->add($outputPath);
 
@@ -76,5 +84,26 @@ class TypeScriptFilter extends BaseNodeFilter
 
     public function filterDump(AssetInterface $asset)
     {
+    }
+
+    private function getAssetContent(AssetInterface $asset)
+    {
+        if ($this->useRealPath && $asset->getSourcePath() && $asset->getSourceRoot()) {
+            $pathInfo = pathinfo($asset->getSourcePath());
+            $dir = $asset->getSourceRoot() . DIRECTORY_SEPARATOR . $pathInfo['dirname'];
+
+            $func = function ($matches) use ($dir) {
+                $path = realpath($dir . DIRECTORY_SEPARATOR . $matches[2]);
+                if ($path === false) {
+                    $path = $matches[2];
+                }
+
+                return $matches[1] . $path;
+            };
+
+            return preg_replace_callback('|(\s*/{3}\s*<reference\s+path=")([^"]+)|', $func, $asset->getContent());
+        }
+
+        return $asset->getContent();
     }
 }
